@@ -1,1 +1,9 @@
-This is an idle clicker where you can develop your shooting range. Other cats will come to you to practice. Buy new weapons! Make the targets harder!
+"Paw-paw" - это idle-кликер, в котоорм вы играете за кота, который открыл свой тир
+
+Вы будете развивать свой тир:
+- открывать больше полей с мишенями
+- делать мишени меньше и подвижнее
+- увиличивать ассортимент оружия
+
+В ваш тир будут приходить другие коты и кошки, чтобы пострелять
+Улучшайте тир и развивайтесь!
