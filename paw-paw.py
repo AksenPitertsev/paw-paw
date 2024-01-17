@@ -32,13 +32,13 @@ hero2 = pygame.image.load("data\\images\\cat2.png").convert_alpha()
 
 # загрузка звуков
 shot = pygame.mixer.Sound("data\\music\\shot.wav")
-shot.set_volume(0.3)
+shot.set_volume(0.4)
 reload_gun = pygame.mixer.Sound("data\\music\\reload.wav")
-reload_gun.set_volume(0.3)
+reload_gun.set_volume(0.4)
 out_bullets = pygame.mixer.Sound("data\\music\\out_pistol.wav")
-out_bullets.set_volume(0.3)
+out_bullets.set_volume(0.4)
 pygame.mixer.music.load("data\\music\\bg_music.wav")
-pygame.mixer.music.set_volume(0.1)
+pygame.mixer.music.set_volume(0.5)
 pygame.mixer.music.play(loops=-1)
 
 # создание переменных с задним фоном
@@ -94,16 +94,6 @@ class HeroCat:
 # вызов стартового экрана
 start_screen()
 
-# проверка наличия БД с прогрессом
-# и вызов класса ГГ c обычной/загруженной информацией
-if not os.path.isfile("data\\progress.db"):
-    WorkWithDB.create_database()
-    WorkWithDB.add_elem("player", [0, 0, -13, 7, 1])
-    HeroCat(0, 0, -13, 7, 1)
-else:
-    info = [x for x in WorkWithDB.load_info("player")][0]
-    HeroCat(info[0], info[1], info[2], info[3], info[4])
-
 
 def upgrade_menu():
     # загрузка меню
@@ -119,40 +109,103 @@ def upgrade_menu():
     button3 = pygame.Rect(175, 540, 220, 200)
     button4 = pygame.Rect(750, 540, 220, 200)
 
+    # надпись счёта
+    score_rendered = font.render(f"СЧЁТ: {HeroCat.score}", 1, pygame.Color("green"))
+    score_rect = score_rendered.get_rect()
+    score_rect.top, score_rect.x = 5, 5
+
+    price1, price2 = 0, 0
+
     while True:
         for event in pygame.event.get():
+            # проверка нажатия на кнопку, покупка, улучшение
             if event.type == pygame.MOUSEBUTTONDOWN:
                 rect = pygame.Rect(event.pos, (1, 1))
                 if rect.colliderect(button1):
-                    a = HeroCat.price // 10
-                    if HeroCat.score - (150 * a) >= 0:
-                        HeroCat.score -= 150 * a
-                        HeroCat.price += 10
+                    if HeroCat.score - (200 * price1) >= 0:
+                        HeroCat.score -= 200 * price1
+                        HeroCat.price += 3
                 elif rect.colliderect(button2):
-                    a = (HeroCat.magazine - 7) // 2
-                    if HeroCat.score - (50 * a) >= 0:
-                        HeroCat.score -= 50 * a
+                    if HeroCat.score - (150 * price2) >= 0:
+                        HeroCat.score -= 150 * price2
                         HeroCat.magazine += 2
                 elif rect.colliderect(button3):
-                    if HeroCat.score - 500 >= 0:
-                        HeroCat.score -= 500
-                        HeroCat.spread = [0, 0]
+                    if HeroCat.spread != [0, 0]:
+                        if HeroCat.score - 2000 >= 0:
+                            HeroCat.score -= 2000
+                            HeroCat.spread = [0, 0]
                 elif rect.colliderect(button4):
-                    # if HeroCat.score - 1000 >= 0:
-                    HeroCat.shoot_ranges += 1
-                    return
+                    if HeroCat.score - (5000 * HeroCat.shoot_ranges) >= 0:
+                        HeroCat.shoot_ranges += 1
+                        return
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return
 
+            price1 = HeroCat.price // 3
+            price2 = (HeroCat.magazine - 7) // 2
+
+            screen.blit(fon, (0, 0))
+
+            # вывод счёта
+            score_txt = font.render(f"СЧЁТ: {HeroCat.score}", 1, pygame.Color("green"))
+            screen.blit(score_txt, score_rect)
+
+            # надпись увелечение дохода за попадание
+            string_rendered = font.render(
+                f"ЦЕНА:{200 * price1}    УР.:{HeroCat.price // 3}",
+                1,
+                pygame.Color("green"),
+            )
+            intro_rect = string_rendered.get_rect()
+            intro_rect.top, intro_rect.x = 350, 450
+            screen.blit(string_rendered, intro_rect)
+
+            # надпись вместительности магазина
+            string_rendered = font.render(
+                f"ЦЕНА:{150 * price2}    УР.:{(HeroCat.magazine - 7) // 2}",
+                1,
+                pygame.Color("green"),
+            )
+            intro_rect = string_rendered.get_rect()
+            intro_rect.top, intro_rect.x = 350, 1050
+            screen.blit(string_rendered, intro_rect)
+
+            # убрать разброс
+            if HeroCat.spread == [0, 0]:
+                string_rendered = font.render(
+                    f"ЦЕНА:{2000}   НЕ КУПЛЕНО",
+                    1,
+                    pygame.Color("green"),
+                )
+            else:
+                string_rendered = font.render(
+                    f"     КУПЛЕНО",
+                    1,
+                    pygame.Color("green"),
+                )
+            intro_rect = string_rendered.get_rect()
+            intro_rect.top, intro_rect.x = 650, 450
+            screen.blit(string_rendered, intro_rect)
+
+            # надпись вместительности магазина
+            string_rendered = font.render(
+                f"ЦЕНА:{5000 * HeroCat.shoot_ranges}    УР.:{HeroCat.shoot_ranges}",
+                1,
+                pygame.Color("green"),
+            )
+            intro_rect = string_rendered.get_rect()
+            intro_rect.top, intro_rect.x = 650, 1050
+            screen.blit(string_rendered, intro_rect)
+
         pygame.display.flip()
-        clock.tick(1)
+        clock.tick(10)
 
 
 # класс мишени
 class Target(pygame.sprite.Sprite):
     # движущаяся или статичная, номер дорожки
-    def __init__(self, shoot_range, moving=False):
+    def __init__(self, coords_x, moving=False):
         super().__init__(group)
         self.moving = moving
         self.image = pygame.transform.scale(
@@ -160,9 +213,24 @@ class Target(pygame.sprite.Sprite):
             (50, 30),
         )
         self.mask = pygame.mask.from_surface(self.image)
-        self.rect = self.image.get_rect(x=150, bottom=50)
+        for i in coords_x:
+            self.rect = self.image.get_rect(x=i, bottom=70)
 
 
+# класс стен, чтобы пули не проходили через них
+class Wall(pygame.sprite.Sprite):
+    def __init__(self, shoot_range):
+        super().__init__(group)
+        self.moving = moving
+        self.image = pygame.transform.scale(
+            pygame.image.load("data\\images\\target.png").convert_alpha(),
+            (50, 30),
+        )
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect(x=150)
+
+
+# класс пуль
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, move_from, move_to):
         super().__init__(group)
@@ -171,7 +239,9 @@ class Bullet(pygame.sprite.Sprite):
         # self.image = pygame.transform.rotate(self.image, angle)
         self.rect = self.image.get_rect(center=move_from)
         self.mask = pygame.mask.from_surface(self.image)
+        # self.move_to = move_to
 
+    # функция, которая считывает попадание в мишень
     def update(self):
         if not pygame.sprite.collide_mask(self, target):
             self.rect.y -= 10
@@ -179,8 +249,8 @@ class Bullet(pygame.sprite.Sprite):
             HeroCat.score += HeroCat.price
             self.rect.y -= 100
 
-        # if random.randrange(-2, 1) >= 0:
-        #     self.rect.x += random.randrange(HeroCat.spread[0], HeroCat.spread[1])
+        if random.randrange(-2, 1) >= 0:
+            self.rect.x += random.randrange(HeroCat.spread[0], HeroCat.spread[1])
         # if (
         #     self.move_to[0] - 10 < self.rect.x < self.move_to[0] + 10
         #     and self.move_to[1] + 10 > self.rect.y > self.move_to[1] - 10
@@ -199,11 +269,29 @@ class Bullet(pygame.sprite.Sprite):
 
 running = True
 
-remaining_bullets = HeroCat.magazine
-
 group = pygame.sprite.Group()
-target = Target(1)
 green_zone = pygame.Rect(0, HEIGHT - 300, 500, 300)
+
+# проверка наличия БД с прогрессом
+# и вызов класса ГГ c обычной/загруженной информацией
+coords_x = {
+    "1": [150],
+    "2": [350, 450],
+    "3": [550, 600, 650],
+    "4": [750, 800, 850, 900],
+}
+if not os.path.isfile("data\\progress.db"):
+    WorkWithDB.create_database()
+    WorkWithDB.add_elem("player", [0, 0, -13, 7, 1])
+    HeroCat(0, 1, -13, 7, 1)
+    target = Target(coords_x["1"])
+else:
+    info = [x for x in WorkWithDB.load_info("player")][0]
+    HeroCat(info[0], info[1], info[2], info[3], info[4])
+    for i in range(info[1]):
+        target = Target(coords_x[str(info[1])])
+
+remaining_bullets = HeroCat.magazine
 
 while running:
     for event in pygame.event.get():
@@ -261,7 +349,7 @@ while running:
 
     # отрисовка фона, игрока, пулей
     screen.fill(pygame.Color(0, 0, 0))
-    screen.blit(d[f"bg{HeroCat.shoot_ranges + 1}"], (0, 0))
+    screen.blit(d[f"bg{HeroCat.shoot_ranges}"], (0, 0))
     screen.blit(hero1, (hero_x, hero_y))
 
     # отображение счёта игрока
@@ -279,12 +367,14 @@ while running:
         intro_rect.top = HEIGHT - 40
         intro_rect.x = WIDTH - 80
     else:
+        # вывод подсказки для перезарядки
         string_rendered = font.render(f"Нажмите R", 1, pygame.Color("red"))
         intro_rect = string_rendered.get_rect()
         intro_rect.top = HEIGHT - 40
         intro_rect.x = WIDTH - 130
     screen.blit(string_rendered, intro_rect)
 
+    # обновление пуль
     group.draw(screen)
     group.update()
     pygame.display.update()

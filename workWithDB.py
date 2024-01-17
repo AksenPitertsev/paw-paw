@@ -16,7 +16,7 @@ class WorkWithDB:
             )
         """
 
-        with sqlite3.connect(f"data\progress.db") as con:
+        with sqlite3.connect(f"data\\progress.db") as con:
             con.executescript(query)
 
     def add_elem(username, info):
@@ -32,7 +32,7 @@ class WorkWithDB:
             )
         """
 
-        with sqlite3.connect(f"data\progress.db") as con:
+        with sqlite3.connect(f"data\\progress.db") as con:
             con.executescript(add_query)
 
     # замена данных на дату
@@ -43,7 +43,7 @@ class WorkWithDB:
             SET (username, score, shooting_ranges, spread, magazine, price) = {info}
             WHERE username = "{username}"
         """
-        with sqlite3.connect(f"data\progress.db") as con:
+        with sqlite3.connect(f"data\\progress.db") as con:
             con.executescript(overwrite_query)
 
     def load_info(username):
@@ -53,5 +53,5 @@ class WorkWithDB:
             WHERE username = "{username}"
         """
 
-        res = sqlite3.connect(f"data\progress.db").execute(load_query)
+        res = sqlite3.connect(f"data\\progress.db").execute(load_query)
         return res
